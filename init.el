@@ -2,152 +2,13 @@
 
 ;; ------------------------------------------------------------------------
 ;; @ coding system
+; 言語を日本語にする
+(set-language-environment 'Japanese)
+; 極力UTF-8とする
+(prefer-coding-system 'utf-8)
 
-   ;; 日本語入力のための設定
-   (set-keyboard-coding-system 'cp932)
+(add-to-list 'load-path "/usr/share/emacs/site-lisp") 
 
-   (prefer-coding-system 'utf-8-dos)
-   (set-file-name-coding-system 'cp932)
-   (setq default-process-coding-system '(cp932 . cp932))
-
-;; ------------------------------------------------------------------------
-;; @ ime
-
-   ;; 標準IMEの設定
-   (setq default-input-method "W32-IME")
-
-   ;; IME状態のモードライン表示
-   (setq-default w32-ime-mode-line-state-indicator "[Aa]")
-   (setq w32-ime-mode-line-state-indicator-list '("[Aa]" "[あ]" "[Aa]"))
-
-   ;; IMEの初期化
-   (w32-ime-initialize)
-
-   ;; IME OFF時の初期カーソルカラー
-   (set-cursor-color "red")
-
-   ;; IME ON/OFF時のカーソルカラー
-   (add-hook 'input-method-activate-hook
-             (lambda() (set-cursor-color "green")))
-   (add-hook 'input-method-inactivate-hook
-             (lambda() (set-cursor-color "red")))
-
-   ;; バッファ切り替え時にIME状態を引き継ぐ
-   (setq w32-ime-buffer-switch-p nil)
-
-;; ------------------------------------------------------------------------
-;; @ encode
-
-   ;; 機種依存文字
-   (require 'cp5022x)
-   (define-coding-system-alias 'euc-jp 'cp51932)
-
-   ;; decode-translation-table の設定
-   (coding-system-put 'euc-jp :decode-translation-table
-              (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
-   (coding-system-put 'iso-2022-jp :decode-translation-table
-              (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
-   (coding-system-put 'utf-8 :decode-translation-table
-              (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
-
-   ;; encode-translation-table の設定
-   (coding-system-put 'euc-jp :encode-translation-table
-              (get 'japanese-ucs-cp932-to-jis-map 'translation-table))
-   (coding-system-put 'iso-2022-jp :encode-translation-table
-              (get 'japanese-ucs-cp932-to-jis-map 'translation-table))
-   (coding-system-put 'cp932 :encode-translation-table
-              (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
-   (coding-system-put 'utf-8 :encode-translation-table
-              (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
-
-   ;; charset と coding-system の優先度設定
-   (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
-             'katakana-jisx0201 'iso-8859-1 'cp1252 'unicode)
-   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
-
-   ;; PuTTY 用の terminal-coding-system の設定
-   (apply 'define-coding-system 'utf-8-for-putty
-      "UTF-8 (translate jis to cp932)"
-      :encode-translation-table 
-      (get 'japanese-ucs-jis-to-cp932-map 'translation-table)
-      (coding-system-plist 'utf-8))
-   (set-terminal-coding-system 'utf-8-for-putty)
-
-   ;; East Asian Ambiguous
-   (defun set-east-asian-ambiguous-width (width)
-     (while (char-table-parent char-width-table)
-       (setq char-width-table (char-table-parent char-width-table)))
-     (let ((table (make-char-table nil)))
-       (dolist (range 
-            '(#x00A1 #x00A4 (#x00A7 . #x00A8) #x00AA (#x00AD . #x00AE)
-             (#x00B0 . #x00B4) (#x00B6 . #x00BA) (#x00BC . #x00BF)
-             #x00C6 #x00D0 (#x00D7 . #x00D8) (#x00DE . #x00E1) #x00E6
-             (#x00E8 . #x00EA) (#x00EC . #x00ED) #x00F0 
-             (#x00F2 . #x00F3) (#x00F7 . #x00FA) #x00FC #x00FE
-             #x0101 #x0111 #x0113 #x011B (#x0126 . #x0127) #x012B
-             (#x0131 . #x0133) #x0138 (#x013F . #x0142) #x0144
-             (#x0148 . #x014B) #x014D (#x0152 . #x0153)
-             (#x0166 . #x0167) #x016B #x01CE #x01D0 #x01D2 #x01D4
-             #x01D6 #x01D8 #x01DA #x01DC #x0251 #x0261 #x02C4 #x02C7
-             (#x02C9 . #x02CB) #x02CD #x02D0 (#x02D8 . #x02DB) #x02DD
-             #x02DF (#x0300 . #x036F) (#x0391 . #x03A9)
-             (#x03B1 . #x03C1) (#x03C3 . #x03C9) #x0401 
-             (#x0410 . #x044F) #x0451 #x2010 (#x2013 . #x2016)
-             (#x2018 . #x2019) (#x201C . #x201D) (#x2020 . #x2022)
-             (#x2024 . #x2027) #x2030 (#x2032 . #x2033) #x2035 #x203B
-             #x203E #x2074 #x207F (#x2081 . #x2084) #x20AC #x2103
-             #x2105 #x2109 #x2113 #x2116 (#x2121 . #x2122) #x2126
-             #x212B (#x2153 . #x2154) (#x215B . #x215E) 
-             (#x2160 . #x216B) (#x2170 . #x2179) (#x2190 . #x2199)
-             (#x21B8 . #x21B9) #x21D2 #x21D4 #x21E7 #x2200
-             (#x2202 . #x2203) (#x2207 . #x2208) #x220B #x220F #x2211
-             #x2215 #x221A (#x221D . #x2220) #x2223 #x2225
-             (#x2227 . #x222C) #x222E (#x2234 . #x2237)
-             (#x223C . #x223D) #x2248 #x224C #x2252 (#x2260 . #x2261)
-             (#x2264 . #x2267) (#x226A . #x226B) (#x226E . #x226F)
-             (#x2282 . #x2283) (#x2286 . #x2287) #x2295 #x2299 #x22A5
-             #x22BF #x2312 (#x2460 . #x24E9) (#x24EB . #x254B)
-             (#x2550 . #x2573) (#x2580 . #x258F) (#x2592 . #x2595) 
-             (#x25A0 . #x25A1) (#x25A3 . #x25A9) (#x25B2 . #x25B3)
-             (#x25B6 . #x25B7) (#x25BC . #x25BD) (#x25C0 . #x25C1)
-             (#x25C6 . #x25C8) #x25CB (#x25CE . #x25D1) 
-             (#x25E2 . #x25E5) #x25EF (#x2605 . #x2606) #x2609
-             (#x260E . #x260F) (#x2614 . #x2615) #x261C #x261E #x2640
-             #x2642 (#x2660 . #x2661) (#x2663 . #x2665) 
-             (#x2667 . #x266A) (#x266C . #x266D) #x266F #x273D
-             (#x2776 . #x277F) (#xE000 . #xF8FF) (#xFE00 . #xFE0F) 
-             #xFFFD
-             ))
-     (set-char-table-range table range width))
-       (optimize-char-table table)
-       (set-char-table-parent table char-width-table)
-       (setq char-width-table table)))
-   (set-east-asian-ambiguous-width 2)
-
-   ;; emacs-w3m
-   (eval-after-load "w3m"
-     '(when (coding-system-p 'cp51932)
-        (add-to-list 'w3m-compatible-encoding-alist '(euc-jp . cp51932))))
-
-   ;; Gnus
-   (eval-after-load "mm-util"
-     '(when (coding-system-p 'cp50220)
-        (add-to-list 'mm-charset-override-alist '(iso-2022-jp . cp50220))))
-
-   ;; SEMI (cf. http://d.hatena.ne.jp/kiwanami/20091103/1257243524)
-   (eval-after-load "mcs-20"
-     '(when (coding-system-p 'cp50220)
-        (add-to-list 'mime-charset-coding-system-alist 
-             '(iso-2022-jp . cp50220))))
-
-   ;; 全角チルダ/波ダッシュをWindowsスタイルにする
-   (let ((table (make-translation-table-from-alist '((#x301c . #xff5e))) ))
-     (mapc
-      (lambda (coding-system)
-        (coding-system-put coding-system :decode-translation-table table)
-        (coding-system-put coding-system :encode-translation-table table)
-        )
-      '(utf-8 cp932 utf-16le)))
 
 ;; ------------------------------------------------------------------------
 ;; @ font
@@ -180,6 +41,8 @@
 ;;               default-frame-alist))
   (setq default-frame-alist
         (append '(
+;(add-to-list 'default-frame-alist `(font . "Ricty-12"))
+		  (font                 . "Ricty-12")
                   (width                . 102    )
                   (height               . 61     )
                   (top                  . 0      )
@@ -195,7 +58,7 @@
 ;                  (foreground-color     . "dark slate gray") ;; 文字色
                   (background-color     . "black") ;; 背景色
 ;                  (background-color
-;n                  (background-color     . "lemon chiffon") ;; 背景色
+;                  (background-color     . "lemon chiffon") ;; 背景色
                   (cursor-color         . "white"  ) ;; カーソル色
                   ) default-frame-alist) )
   (setq initial-frame-alist default-frame-alist)
@@ -246,11 +109,11 @@
 ;   (setq display-time-string-forms '(24-hours ":" minutes))
 ;   (display-time-mode t)
 
-   ;; cp932エンコード時の表示を「P」とする
-   (coding-system-put 'cp932 :mnemonic ?P)
-   (coding-system-put 'cp932-dos :mnemonic ?P)
-   (coding-system-put 'cp932-unix :mnemonic ?P)
-   (coding-system-put 'cp932-mac :mnemonic ?P)
+   ;; ;; cp932エンコード時の表示を「P」とする
+   ;; (coding-system-put 'cp932 :mnemonic ?P)
+   ;; (coding-system-put 'cp932-dos :mnemonic ?P)
+   ;; (coding-system-put 'cp932-unix :mnemonic ?P)
+   ;; (coding-system-put 'cp932-mac :mnemonic ?P)
 
 ;; ------------------------------------------------------------------------
 ;; @ cursor
@@ -280,19 +143,19 @@
    ;; スタートアップ時のエコー領域メッセージの非表示
 ;   (setq inhibit-startup-echo-area-message -1)
 
-;; ------------------------------------------------------------------------
-;; @ image-library
-   (setq image-library-alist
-         '((xpm "libxpm.dll")
-           (png "libpng14.dll")
-           (jpeg "libjpeg.dll")
-           (tiff "libtiff3.dll")
-           (gif "libungif4.dll")
-           (svg "librsvg-2-2.dll")
-           (gdk-pixbuf "libgdk_pixbuf-2.0-0.dll")
-           (glib "libglib-2.0-0.dll")
-           (gobject "libgobject-2.0-0.dll"))
-         )
+;; ;; ------------------------------------------------------------------------
+;; ;; @ image-library
+;;    (setq image-library-alist
+;;          '((xpm "libxpm.dll")
+;;            (png "libpng14.dll")
+;;            (jpeg "libjpeg.dll")
+;;            (tiff "libtiff3.dll")
+;;            (gif "libungif4.dll")
+;;            (svg "librsvg-2-2.dll")
+;;            (gdk-pixbuf "libgdk_pixbuf-2.0-0.dll")
+;;            (glib "libglib-2.0-0.dll")
+;;            (gobject "libgobject-2.0-0.dll"))
+;;          )
 
 ;; ------------------------------------------------------------------------
 ;; @ backup
@@ -419,45 +282,6 @@
 ;;    (global-set-key [(control shift tab)] 'shk-tabbar-prev)
 
 ;; ------------------------------------------------------------------------
-;; @ setup-cygwin
-   ;; (setq cygwin-mount-cygwin-bin-directory
-   ;;       (concat (getenv "CYGWIN_DIR") "\\bin"))
-   ;; (require 'setup-cygwin)
-
-;; ------------------------------------------------------------------------
-;; @ shell
-   (require 'shell)
-   (setq explicit-shell-file-name "bash.exe")
-   (setq shell-command-switch "-c")
-   (setq shell-file-name "bash.exe")
-
-   ;; (M-! and M-| and compile.el)
-   (setq shell-file-name "bash.exe")
-   (modify-coding-system-alist 'process ".*sh\\.exe" 'cp932)
-
-   ;; shellモードの時の^M抑制
-   (add-hook 'comint-output-filter-functions 'shell-strip-ctrl-m nil t)
-
-   ;; shell-modeでの補完 (for drive letter)
-   (setq shell-file-name-chars "~/A-Za-z0-9_^$!#%&{}@'`.,;()-")
-
-   ;; エスケープシーケンス処理の設定
-   (autoload 'ansi-color-for-comint-mode-on "ansi-color"
-             "Set `ansi-color-for-comint-mode' to t." t)
-
-   (setq shell-mode-hook
-         (function
-          (lambda ()
-
-            ;; シェルモードの入出力文字コード
-            (set-buffer-process-coding-system 'sjis-dos 'sjis-unix)
-            (set-buffer-file-coding-system    'sjis-unix)
-            )))
-
-
-
-
-;; ------------------------------------------------------------------------
 ;; @ menu-tree
    ;; (setq menu-tree-coding-system 'utf-8)
    ;; (require 'menu-tree)
@@ -466,11 +290,11 @@
 (windmove-default-keybindings)
 (setq windmove-wrap-around t)
 
-(add-to-list 'load-path (expand-file-name "~/.emacs.d/auto-install/"))
-(require 'auto-install)
-(setq auto-install-directory "~/.emacs.d/auto-install/")
-(auto-install-update-emacswiki-package-name t)
-(auto-install-compatibility-setup)
+;; (add-to-list 'load-path (expand-file-name "~/.emacs.d/auto-install/"))
+;; (require 'auto-install)
+;; (setq auto-install-directory "~/.emacs.d/auto-install/")
+;; (auto-install-update-emacswiki-package-name t)
+;; (auto-install-compatibility-setup)
 
 ;;====================================
 ;;; 折り返し表示ON/OFF
@@ -499,16 +323,16 @@
 
 ;; (add-hook 'after-init-hook  (lambda() (eshell)))
 
-;;(autoload 'javascript-mode "javascript" nil t)
-;;(setq auto-mode-alist (cons '("\\.js$" . javascript-mode) auto-mode-alist))
-(autoload 'jasmin-mode "jasmin" nil t)
-;;(setq auto-mode-alist (cons '("\\.smali$" . jasmin-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("MoviePlayer.java$" . jasmin-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("DataHelper.java$" . jasmin-mode) auto-mode-alist))
+;; ;;(autoload 'javascript-mode "javascript" nil t)
+;; ;;(setq auto-mode-alist (cons '("\\.js$" . javascript-mode) auto-mode-alist))
+;; (autoload 'jasmin-mode "jasmin" nil t)
+;; ;;(setq auto-mode-alist (cons '("\\.smali$" . jasmin-mode) auto-mode-alist))
+;; (setq auto-mode-alist (cons '("MoviePlayer.java$" . jasmin-mode) auto-mode-alist))
+;; (setq auto-mode-alist (cons '("DataHelper.java$" . jasmin-mode) auto-mode-alist))
 
 
-(autoload 'javap-mode "javap" nil t)
-(setq auto-mode-alist (cons '("\\.class$" . javap-mode) auto-mode-alist))
+;; (autoload 'javap-mode "javap" nil t)
+;; (setq auto-mode-alist (cons '("\\.class$" . javap-mode) auto-mode-alist))
 
 ;; (load-file "~/cedet-1.0/common/cedet.el")
 ;; (semantic-load-enable-code-helpers)
@@ -542,86 +366,206 @@
 ;    (gud-run nil)
 ))
 
-(require 'cedet)
+;; (require 'cedet)
 
-;; (load-library "cedet")
-(global-ede-mode 1)
-(semantic-mode 1)
-(setq semantic-default-submodes 
-      '(
-	global-semantic-idle-scheduler-mode 
-	global-semantic-idle-completions-mode
-	global-semanticdb-minor-mode
-	global-semantic-decoration-mode
-	global-semantic-highlight-func-mode
-	global-semantic-stickyfunc-mode
-	global-semantic-mru-bookmark-mode
-	))
+;; ;; (load-library "cedet")
+;; (global-ede-mode 1)
+;; (semantic-mode 1)
+;; (setq semantic-default-submodes 
+;;       '(
+;; 	global-semantic-idle-scheduler-mode 
+;; 	global-semantic-idle-completions-mode
+;; 	global-semanticdb-minor-mode
+;; 	global-semantic-decoration-mode
+;; 	global-semantic-highlight-func-mode
+;; 	global-semantic-stickyfunc-mode
+;; 	global-semantic-mru-bookmark-mode
+;; 	))
 
-(require 'jde)
+;; (require 'jde)
 
-;; (setq semantic-load-turn-everything-on t)
-;; (require 'semantic-load)
+;; ;; (setq semantic-load-turn-everything-on t)
+;; ;; (require 'semantic-load)
 
-;(add-to-list 'load-path (expand-file-name "~/emacs/site/jdibug-0.5"))
-;(add-to-list 'load-path (expand-file-name "c:/gnupack_devel-6.02/app/emacs/site-lisp/jdibug-0.5"))
-(require 'jdibug)
-(custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(jde-complete-function (quote jde-complete-menu))
- '(jde-debugger (quote ("jdb")))
- '(jde-jdk-registry (quote (("1.6.0_24" . "c:/Program Files/Java/jdk1.6.0_24"))))
- '(jde-run-option-debug (quote ("Client" "Socket" "javadebug" nil "8700" t)))
- '(jde-sourcepath (quote ("c:/gnupack_devel-6.02/home/0519朝活/javasrc/"))))
-(custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- )
+;; ;(add-to-list 'load-path (expand-file-name "~/emacs/site/jdibug-0.5"))
+;; ;(add-to-list 'load-path (expand-file-name "c:/gnupack_devel-6.02/app/emacs/site-lisp/jdibug-0.5"))
+;; (require 'jdibug)
+;; (custom-set-variables
+;;   ;; custom-set-variables was added by Custom.
+;;   ;; If you edit it by hand, you could mess it up, so be careful.
+;;   ;; Your init file should contain only one such instance.
+;;   ;; If there is more than one, they won't work right.
+;;  '(jde-complete-function (quote jde-complete-menu))
+;;  '(jde-debugger (quote ("jdb")))
+;;  '(jde-jdk-registry (quote (("1.6.0_24" . "c:/Program Files/Java/jdk1.6.0_24"))))
+;;  '(jde-run-option-debug (quote ("Client" "Socket" "javadebug" nil "8700" t)))
+;;  '(jde-sourcepath (quote ("c:/gnupack_devel-6.02/home/0519朝活/javasrc/"))))
+;; (custom-set-faces
+;;   ;; custom-set-faces was added by Custom.
+;;   ;; If you edit it by hand, you could mess it up, so be careful.
+;;   ;; Your init file should contain only one such instance.
+;;   ;; If there is more than one, they won't work right.
+;;  )
 
 ;;; -*- Emacs-Lisp -*-
 
 ;;; 英和辞書閲覧 sdic-mode の設定
 
 
-;; Debian 用パッケージを使ってインストールした場合、(autoload ～) は 
-;; /etc/emacs/site-start.d/50sdic で行っていますので、キーバインドの設
-;; 定 (global-set-key ～) のみで十分です。
+;; ;; Debian 用パッケージを使ってインストールした場合、(autoload ～) は 
+;; ;; /etc/emacs/site-start.d/50sdic で行っていますので、キーバインドの設
+;; ;; 定 (global-set-key ～) のみで十分です。
 
-(autoload 'sdic-describe-word "sdic" "英単語の意味を調べる" t nil)
-(global-set-key "\C-cw" 'sdic-describe-word)
-(autoload 'sdic-describe-word-at-point "sdic" "カーソル位置の英単語の意味を調べる" t nil)
-(global-set-key "\C-cW" 'sdic-describe-word-at-point)
+;; (autoload 'sdic-describe-word "sdic" "英単語の意味を調べる" t nil)
+;; (global-set-key "\C-cw" 'sdic-describe-word)
+;; (autoload 'sdic-describe-word-at-point "sdic" "カーソル位置の英単語の意味を調べる" t nil)
+;; (global-set-key "\C-cW" 'sdic-describe-word-at-point)
 
-;; これは、動作と見掛けを調節するための設定です。
-(setq sdic-window-height 8
-      sdic-disable-select-window t)
+;; ;; これは、動作と見掛けを調節するための設定です。
+;; (setq sdic-window-height 8
+;;       sdic-disable-select-window t)
 
-;; Debian 用パッケージを利用するか、Makefile を利用して辞書を同時にイ
-;; ンストールした場合は、辞書に関する設定も完了済ですから、特別な設定
-;; は要りません。以下の設定では、個人的に検索する辞書を付け加えていま
-;; す。研究室と自宅とで検索する辞書を変更しています。
+;; ;; Debian 用パッケージを利用するか、Makefile を利用して辞書を同時にイ
+;; ;; ンストールした場合は、辞書に関する設定も完了済ですから、特別な設定
+;; ;; は要りません。以下の設定では、個人的に検索する辞書を付け加えていま
+;; ;; す。研究室と自宅とで検索する辞書を変更しています。
 
-(setq sdic-eiwa-dictionary-list '((sdicf-client "~/usr/dict/gene.sdic"))
-	  sdic-waei-dictionary-list '((sdicf-client "~/usr/dict/jedict.sdic"
-						    (add-keys-to-headword t))))
+;; (setq sdic-eiwa-dictionary-list '((sdicf-client "~/usr/dict/gene.sdic"))
+;; 	  sdic-waei-dictionary-list '((sdicf-client "~/usr/dict/jedict.sdic"
+;; 						    (add-keys-to-headword t))))
 
-;; diredでWindowsに関連付けられたアプリを起動する
-(defun dired-winopen ()
-  "Type '[dired-winstart]': win-start the current line's file."
-  (interactive)
-  (if (eq major-mode 'dired-mode)
-      (let ((fname (dired-get-filename)))
-	(w32-shell-execute "open" fname)
-	(message "Windwos Open file: %s" fname))))
-;;; dired のキー割り当て追加
-(add-hook 'dired-mode-hook
-	  (lambda ()
-	    (define-key dired-mode-map "z" 'dired-winopen))) ;; キーバインド 
+;; ;; diredでWindowsに関連付けられたアプリを起動する
+;; (defun dired-winopen ()
+;;   "Type '[dired-winstart]': win-start the current line's file."
+;;   (interactive)
+;;   (if (eq major-mode 'dired-mode)
+;;       (let ((fname (dired-get-filename)))
+;; 	(w32-shell-execute "open" fname)
+;; 	(message "Windwos Open file: %s" fname))))
+;; ;;; dired のキー割り当て追加
+;; (add-hook 'dired-mode-hook
+;; 	  (lambda ()
+;; 	    (define-key dired-mode-map "z" 'dired-winopen))) ;; キーバインド 
 
 ;;; 対応するカッコをハイライトさせる
-(show-paren-mode t)
+;(show-paren-mode t)
+
+;;
+;; フォントの設定
+;;
+
+;; VMware 上の X Server であるか？
+;; (defvar my-x-on-vmware nil)
+;; (if (string-match "^HOSTNAME-ON-VMWARE" (system-name))
+;;     (setq my-x-on-vmware t))
+;; (setq my-x-on-vmware t)
+
+;; (when window-system
+;;   (cond
+;;    ;; Emacs 23 以上
+;;    ((>= emacs-major-version 23)
+;;     (let (my-font-height my-font my-font-ja my-font-size my-fontset)
+;;       (cond
+;;        ;; for X (debian/ubuntu/fedora)
+;;        ((eq window-system 'x)
+;; 	;;(setq my-font-height 90)
+;; 	(setq my-font-height 105)
+;; 	;;(setq my-font-height 120)
+;; 	;;(setq my-font "Monospace")
+;; 	;;(setq my-font "Inconsolata")
+;; 	(setq my-font "Ricty Discord")
+;; 	;;(setq my-font "Takaoゴシック")
+;; 	;;(setq my-font-ja "VL ゴシック")
+;; 	(setq my-font-ja "Ricty Discord")
+;; 	;;(setq my-font-ja "Takaoゴシック")
+;; 	;;(setq my-font-ja "IPAゴシック")
+
+;; 	(setq face-font-rescale-alist
+;; 	      '(("-cdac$" . 1.3)))
+
+;; 	;; VMware 上のX11では、800x600 のとき 96 dpi になるように調節されている。
+;; 	;; なので、別のサイズやフルスクリーンにすると、dpi の値が変化する。
+;; 	;; 結果、Emacs Xft では同じ pt に対するpixel値が大きくなってしまう。
+;; 	;; 対処不明。。。取り敢えず直接 pixel サイズで指定して対処？
+;; 	(when my-x-on-vmware
+;; 	  (setq my-font-size 14))
+;; 	))
+
+;;       ;; デフォルトフォント設定
+;;       (cond
+;;        ;; pixel 単位で指定
+;;        ((and my-font-size my-font)
+;; 	(setq my-fontset
+;; 	      (create-fontset-from-ascii-font (format "%s:size=%d" my-font my-font-size))))
+;;        ;; 高さを pt 単位で指定
+;;        (my-font
+;; 	(set-face-attribute 'default nil :family my-font :height my-font-height)
+;; 	;;(set-frame-font (format "%s-%d" my-font (/ my-font-height 10)))
+;; 	)
+;;        )
+
+;;       (when my-fontset
+;; 	(add-to-list 'default-frame-alist `(font . ,my-fontset) t))
+
+;;       ;; 日本語文字に別のフォントを指定
+;;       (when my-font-ja
+;; 	(let ((fn (or my-fontset (frame-parameter nil 'font)))
+;; 	      (rg "iso10646-1"))
+;; 	  (set-fontset-font fn 'katakana-jisx0201 `(,my-font-ja . ,rg))
+;; 	  (set-fontset-font fn 'japanese-jisx0208 `(,my-font-ja . ,rg))
+;; 	  (set-fontset-font fn 'japanese-jisx0212 `(,my-font-ja . ,rg)))
+;; 	)
+;;       ))
+;;    ))
+
+
+;; ;; Ricty {{{2 (http://save.sys.t.u-tokyo.ac.jp/~yusa/fonts/ricty.html)
+;; (set-face-attribute 'default nil
+;;                    :family "Ricty"
+;;                    :height 105)
+;; (set-fontset-font
+;;  nil 'japanese-jisx0208
+;;  (font-spec :family "Ricty"))
+
+;(set-frame-font "Ricty Discord-13.5") 
+;(set-frame-font "Ricty-12") 
+;;       (when my-fontset
+
+;(set-frame-font "MS Gothic-10") 
+
+   ;; 編集中ファイルのバックアップ間隔（打鍵）
+;(set-frame-font "MS Gothic-10.5") 
+;(setq line-spacing 2)
+
+;; ibus-mode
+(require 'ibus)
+;; Turn on ibus-mode automatically after loading .emacs
+(add-hook 'after-init-hook 'ibus-mode-on)
+;; Use C-SPC for Set Mark command
+(ibus-define-common-key ?\C-\s nil)
+;; Use C-/ for Undo command
+(ibus-define-common-key ?\C-/ nil)
+;; Change cursor color depending on IBus status
+(setq ibus-cursor-color '("limegreen" "white" "blue"))
+(global-set-key "\C-\\" 'ibus-toggle)
+
+
+;; global
+(require 'gtags)
+(setq c-mode-hook
+      '(lambda ()
+	 (gtags-mode 1)
+	 ))
+(setq gtags-mode-hook
+      '(lambda ()
+;         (local-set-key "\M-t" 'gtags-find-tag)
+         (local-set-key "\M-r" 'gtags-find-rtag)
+         (local-set-key "\M-s" 'gtags-find-symbol)
+;         (local-set-key "\C-t" 'gtags-pop-stack)
+         ))
+
+
+
+
+
+
