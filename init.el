@@ -564,6 +564,9 @@
 ;         (local-set-key "\C-t" 'gtags-pop-stack)
          ))
 
+;; コピーした内容を clip-board にもコピーします。
+(if (equal system-type 'gnu/linux)
+    (setq x-select-enable-clipboard t))
 
 
 
