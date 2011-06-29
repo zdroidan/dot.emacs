@@ -558,11 +558,17 @@
 	 ))
 (setq gtags-mode-hook
       '(lambda ()
-;         (local-set-key "\M-t" 'gtags-find-tag)
-         (local-set-key "\M-r" 'gtags-find-rtag)
+         (local-set-key "\M-t" 'gtags-find-tag)
+         (local-set-key "\M-r" 'gtags-find-rtag)        
          (local-set-key "\M-s" 'gtags-find-symbol)
-;         (local-set-key "\C-t" 'gtags-pop-stack)
+         (local-set-key "\C-t" 'gtags-pop-stack)
          ))
+
+(add-hook 'c-mode-common-hook
+          '(lambda()
+             (gtags-mode 1)
+             (gtags-make-complete-list)
+             ))
 
 ;; コピーした内容を clip-board にもコピーします。
 (if (equal system-type 'gnu/linux)
