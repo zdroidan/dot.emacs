@@ -8,7 +8,7 @@
 (prefer-coding-system 'utf-8)
 
 (add-to-list 'load-path "/usr/share/emacs/site-lisp") 
-
+(add-to-list 'load-path "~/.emacs.d/site-lisp")
 
 ;; ------------------------------------------------------------------------
 ;; @ font
@@ -573,8 +573,4 @@
 ;; コピーした内容を clip-board にもコピーします。
 (if (equal system-type 'gnu/linux)
     (setq x-select-enable-clipboard t))
-
-
-
-
 
