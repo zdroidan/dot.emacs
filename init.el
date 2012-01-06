@@ -574,3 +574,5 @@
 (if (equal system-type 'gnu/linux)
     (setq x-select-enable-clipboard t))
 
+;; bashdb.el 2012/01/05
+(require 'dbgr)
