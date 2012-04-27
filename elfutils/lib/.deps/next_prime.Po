@@ -1,0 +1,4 @@
+next_prime.o: next_prime.c \
+ /usr/lib/gcc/arm-linux-gnueabi/4.4.5/include/stddef.h
+
+/usr/lib/gcc/arm-linux-gnueabi/4.4.5/include/stddef.h:
